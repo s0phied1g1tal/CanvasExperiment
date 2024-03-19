@@ -2,37 +2,58 @@
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
 
-// Functie om een regenboogkleurige cirkel te tekenen op de gegeven positie (x, y)
-function drawRainbowCircle(x, y) {
-  var radius = 50; // Straal van de cirkel
-  var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3']; // Regenboogkleuren
+// Stel de canvasgrootte in op volledige schermgrootte
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-  // Loop door de kleuren en teken secties van de cirkel met verschillende kleuren
-  for (var i = 0; i < colors.length; i++) {
-    // Bepaal begin- en eindhoeken voor de huidige sectie van de cirkel
-    var startAngle = (i * Math.PI * 2) / colors.length;
-    var endAngle = ((i + 1) * Math.PI * 2) / colors.length;
+// Lijst om muisposities op te slaan
+var mousePositions = [];
 
-    // Teken de sectie van de cirkel met de huidige kleur
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.arc(x, y, radius, startAngle, endAngle);
-    ctx.fillStyle = colors[i];
-    ctx.fill();
-    ctx.closePath();
-  }
+// Functie om een lijn te tekenen tussen twee punten met een verloop van kleur
+function drawLine(x1, y1, x2, y2, color) {
+  var gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+  gradient.addColorStop(0, 'transparent');
+  gradient.addColorStop(1, color);
+  
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 5;
+  ctx.stroke();
 }
 
-// Event listener om de muispositie te volgen en de tekening bij te werken
+// Functie om de tekening bij te werken op basis van de muisposities
+function updateDrawing() {
+  // Wis het canvas met een lichte transparantie om een vloeiend effect te creëren
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Tekenen van lijnen tussen opeenvolgende muisposities
+  for (var i = 1; i < mousePositions.length; i++) {
+    var color = 'hsl(' + (i * 10) + ', 100%, 50%)'; // Gebruik HSL-kleur met variabele hue
+    drawLine(mousePositions[i - 1].x, mousePositions[i - 1].y, mousePositions[i].x, mousePositions[i].y, color);
+  }
+
+  // Beperk de grootte van de lijst met muisposities om prestatieredenen
+  if (mousePositions.length > 100) {
+    mousePositions.shift();
+  }
+
+  // Vraag nieuwe frame aan voor continue animatie
+  requestAnimationFrame(updateDrawing);
+}
+
+// Event listener om de muispositie te volgen
 canvas.addEventListener('mousemove', function(event) {
   // Bepaal de muispositie ten opzichte van het canvas
   var rect = canvas.getBoundingClientRect();
   var mouseX = event.clientX - rect.left;
   var mouseY = event.clientY - rect.top;
 
-  // Wis het canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Teken de regenboogkleurige cirkel op de positie van de muis
-  drawRainbowCircle(mouseX, mouseY);
+  // Voeg huidige muispositie toe aan de lijst van posities
+  mousePositions.push({ x: mouseX, y: mouseY });
 });
+
+// Start de animatie
+updateDrawing();
