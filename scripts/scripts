@@ -1,0 +1,59 @@
+// Haal het canvas element op
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+
+// Stel de canvasgrootte in op volledige schermgrootte
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Lijst om muisposities op te slaan
+var mousePositions = [];
+
+// Functie om een lijn te tekenen tussen twee punten met een verloop van kleur
+function drawLine(x1, y1, x2, y2, color) {
+  var gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+  gradient.addColorStop(0, 'transparent');
+  gradient.addColorStop(1, color);
+  
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 5;
+  ctx.stroke();
+}
+
+// Functie om de tekening bij te werken op basis van de muisposities
+function updateDrawing() {
+  // Wis het canvas met een lichte transparantie om een vloeiend effect te creëren
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Tekenen van lijnen tussen opeenvolgende muisposities
+  for (var i = 1; i < mousePositions.length; i++) {
+    var color = 'hsl(' + (i * 10) + ', 100%, 50%)'; // Gebruik HSL-kleur met variabele hue
+    drawLine(mousePositions[i - 1].x, mousePositions[i - 1].y, mousePositions[i].x, mousePositions[i].y, color);
+  }
+
+  // Beperk de grootte van de lijst met muisposities om prestatieredenen
+  if (mousePositions.length > 100) {
+    mousePositions.shift();
+  }
+
+  // Vraag nieuwe frame aan voor continue animatie
+  requestAnimationFrame(updateDrawing);
+}
+
+// Event listener om de muispositie te volgen
+canvas.addEventListener('mousemove', function(event) {
+  // Bepaal de muispositie ten opzichte van het canvas
+  var rect = canvas.getBoundingClientRect();
+  var mouseX = event.clientX - rect.left;
+  var mouseY = event.clientY - rect.top;
+
+  // Voeg huidige muispositie toe aan de lijst van posities
+  mousePositions.push({ x: mouseX, y: mouseY });
+});
+
+// Start de animatie
+updateDrawing();
